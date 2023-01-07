@@ -50,7 +50,7 @@ fig = plt.figure()
 ax = fig.subplots()
 #sets the axis labels and parameters.
 ax.tick_params(direction = 'in', pad = 15)
-ax.set_xlabel('$2θ$ ($^o$)', fontsize = 15)
+ax.set_xlabel('$2θ$$^o$', fontsize = 15)
 ax.set_ylabel('Intensity  (a.u.)', fontsize = 15)
 ax.plot(x,y,'bo')
 #ax.scatter(x, y, s=15, color='blue', label='Data')
@@ -547,7 +547,7 @@ def AE_IR(x,a,b,c):
     bx = fig.subplots()
     # sets the axis labels and parameters.
     bx.tick_params(direction='in', pad=15)
-    bx.set_xlabel('$2θ$ ($^o$)', fontsize=15)
+    bx.set_xlabel('$2θ$$^o$', fontsize=15)
     bx.set_ylabel('lnI', fontsize=15)
     #bx.plot(x_ND, y_ln, 'r-')
 
@@ -589,8 +589,8 @@ ax1 = fig.add_subplot(gs[0])
 
 #sets the axis labels and parameters.
 ax1.tick_params(direction = 'in', pad = 15)
-ax1.set_xlabel('$2θ$ ($^o$)', fontsize = 15)
-ax1.set_ylabel('Intensity  (a.u.)', fontsize = 15)
+ax1.set_xlabel('$2θ$$^o$', fontsize = 15)
+ax1.set_ylabel('Intensity (a.u.)', fontsize = 15)
 
 # plots the first two data sets: the raw data and the GaussSum.
 ax1.plot(data_set[:,0], data_set[:,1], 'ko')
@@ -675,7 +675,7 @@ ax1.text(0.81, 0.25, r'DA = {0:0.6f} nm'
 ax2 = fig.add_subplot(gs[1])
 ax2.plot(x,residuals(cnsts, y, x, n_value))
 #ax2.plot(x,GaussSum(x,cnsts, n_value))
-ax2.set_xlabel('$2θ$ ($^o$)',fontsize = 15)
+ax2.set_xlabel('$2θ$$^o$',fontsize = 15)
 ax2.set_ylabel('Residuals', fontsize = 15)
 
 # format and show
