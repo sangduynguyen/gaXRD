@@ -57,78 +57,78 @@ def airPLS(x, lambda_=100, porder=1, itermax=15):
 
 from tkinter import filedialog
      
-#if __name__ == '__main__':
+if __name__ == '__main__':
+    '''
+    Example usage and testing
+    '''
+    print('Testing...')
+    from scipy.stats import norm
+    import matplotlib.pyplot as pl
+    import pandas as pd
+    
+    import os
+    #import tkinter as tk
+    #from tkinter import filedialog
+    import sys
 
-print('Testing...')
-from scipy.stats import norm
-import matplotlib.pyplot as pl
-import pandas as pd
+    #file_string = r's1.csv'
+    
+    work_dir = ''
+    work_file =''
+    work_file = filedialog.askopenfilename(initialdir=work_dir, filetypes=[('CSV file', '*.csv')], title='Open CSV file')
 
-import os
-#import tkinter as tk
-#from tkinter import filedialog
-import sys
-
-#file_string = r's1.csv'
-
-work_dir = ''
-work_file =''
-work_file = filedialog.askopenfilename(initialdir=work_dir, filetypes=[('CSV file', '*.csv')], title='Open CSV file')
-
-""" Read the curve CSV file.
-"""
-file_string = work_file
-# if using a '.csv' file, use the following line:
-data_set = pd.read_csv(file_string).to_numpy()
-
-
-# x
-x = data_set[:, 0]
-
-# defines the independent variable.
-#
-y = data_set[:, 1]
+    """ Read the curve CSV file.
+    """
+    file_string = work_file
+    # if using a '.csv' file, use the following line:
+    data_set = pd.read_csv(file_string).to_numpy()
 
 
-x1 = np.arange(0, 1000, 1)
-g1 = norm(loc=100, scale=1.0)  # generate three gaussian as a signal
-g2 = norm(loc=300, scale=3.0)
-g3 = norm(loc=750, scale=5.0)
-signal = g1.pdf(x1) + g2.pdf(x1) + g3.pdf(x1)
-baseline1 = 5e-4 * x1 + 0.2  # linear baseline
-#baseline2 = 0.2 * np.sin(np.pi * x / x.max())  # sinusoidal baseline
-noise = np.random.random(x1.shape[0]) / 500
-print('Generating simulated experiment')
-y1 = signal + baseline1 + noise
-#y2 = signal + baseline2 + noise
-y2=y
-print('Removing baselines')
-c1 = y1 - airPLS(y1)  # corrected values
-c2 = y2 - airPLS(y2)  # with baseline removed
-print('Plotting results')
-fig, ax = pl.subplots(nrows=1, ncols=1)
-#ax[0].plot(x1, y1, '-k')
-#ax[0].plot(x1, c1, '-r')
-#ax[0].set_title('Linear baseline')
-#ax.plot(x, y2, '-k')
-#ax.plot(x, c2, '-r')
-ax.scatter(x, y2, label="Data", c='y')
-ax.scatter(x, c2, label="Data Removing baselines", c='b')
-#ax.set_title('Sinusoidal baseline')
-pl.show()
+    # x
+    x = data_set[:, 0]
 
-# add code
-data_new = {'T':x,'I':c2}
-# save to csv
-df = pd.DataFrame(data_new)
-# saving the dataframe
-#df.to_csv('C1.csv', sep=';', header=False, index=False)   
-df.to_csv('C.csv',header=False, index=False)   
+    # defines the independent variable.
+    #
+    y = data_set[:, 1]
+    
 
-print('Done!')
-
-# close window tinker
-#destroy()
-sys.exit(0)
+    x1 = np.arange(0, 1000, 1)
+    g1 = norm(loc=100, scale=1.0)  # generate three gaussian as a signal
+    g2 = norm(loc=300, scale=3.0)
+    g3 = norm(loc=750, scale=5.0)
+    signal = g1.pdf(x1) + g2.pdf(x1) + g3.pdf(x1)
+    baseline1 = 5e-4 * x1 + 0.2  # linear baseline
+    #baseline2 = 0.2 * np.sin(np.pi * x / x.max())  # sinusoidal baseline
+    noise = np.random.random(x1.shape[0]) / 500
+    print('Generating simulated experiment')
+    y1 = signal + baseline1 + noise
+    #y2 = signal + baseline2 + noise
+    y2=y
+    print('Removing baselines')
+    c1 = y1 - airPLS(y1)  # corrected values
+    c2 = y2 - airPLS(y2)  # with baseline removed
+    print('Plotting results')
+    fig, ax = pl.subplots(nrows=1, ncols=1)
+    #ax[0].plot(x1, y1, '-k')
+    #ax[0].plot(x1, c1, '-r')
+    #ax[0].set_title('Linear baseline')
+    ax.plot(x, y2, '-k')
+    ax.plot(x, c2, '-r')
+    #ax.set_title('Sinusoidal baseline')
+    pl.show()
+    
+    # add code
+    data_new = {'T':x,'I':c2}
+    # save to csv
+    df = pd.DataFrame(data_new)
+    # saving the dataframe
+    #df.to_csv('C1.csv', sep=';', header=False, index=False)   
+    df.to_csv('C.csv',header=False, index=False)   
+    
+    print('Done!')
+    
+    # close window tinker
+    #destroy()
+    sys.exit(0)
    
  
