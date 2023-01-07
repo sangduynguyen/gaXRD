@@ -670,10 +670,10 @@ print("DA=",np.sum(DA1)/n_value," nm")
 ax1.legend(ledger)
 
 #adds text FOM
-#ax1.text(0.01, 0.25, r'GOK''\n FOM = {0:0.4f}'
-ax1.text(0.01, 0.25, r'FOM = {0:0.6f}'
+
+ax1.text(0.01, 0.995, r'(b). Lorentzian model'+', FOM = {0:0.6f}\n'
          .format(abs(FOM(cnsts, y, x, n_value))), transform=ax1.transAxes)
-ax1.text(0.81, 0.25, r'DA = {0:0.6f} nm'
+ax1.text(0.80, 0.25, r'DA = {0:0.6f} nm'
          .format(np.sum(DA1)/n_value), transform=ax1.transAxes)
 
 # Bottom plot: residuals
