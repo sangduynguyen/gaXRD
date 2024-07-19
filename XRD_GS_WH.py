@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from sklearn import datasets, linear_model
 import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt2
 #import matplotlib.pyplot as plt1
 import matplotlib.gridspec as gridspec  # unequal plots
 from scipy.optimize import leastsq
@@ -14,6 +15,8 @@ import os
 import tkinter as tk
 from tkinter import filedialog
 import sys
+import numpy
+import math
 
 import builtins
 
@@ -51,7 +54,7 @@ ax = fig.subplots()
 #sets the axis labels and parameters.
 ax.tick_params(direction = 'in', pad = 15)
 ax.set_xlabel('$2θ$$^o$', fontsize = 15)
-ax.set_ylabel('Intensity (a.u.)', fontsize = 15)
+ax.set_ylabel('Intensity  (a.u.)', fontsize = 15)
 ax.plot(x,y,'bo')
 #ax.scatter(x, y, s=15, color='blue', label='Data')
 ax.grid()
@@ -68,7 +71,7 @@ annot.set_visible(True)
 # Function for storing and showing the clicked values
 #
 #z = 0.1e-1 # import D
-z = 0.1
+z = 1.0
 #try:
 # z = float(input('E: '))
 # if z > 0:
@@ -109,14 +112,11 @@ import math
 # defines a typical gaussian function, of independent variable x,
 def gaussian(x,a,b,c):
     return a*np.exp(-np.pi*(x-b)**2 / (c**2))
-# defines a typical gaussian function, of independent variable x,
-def lorentz(x,a,b,c):
-    return a*c**2/((x-b)**2 + (c**2))
+    #return a * c ** 2 / ((x - b) ** 2 + (c ** 2))
 
 # defines the expected resultant as a sum of intrinsic gaussian functions
 def GaussSum(x, p, n):
-    return builtins.sum(lorentz(x, p[3*k], p[3*k+1], p[3*k+2]) for k in range(n))
-    #return builtins.sum(gaussian(x, p[3*k], p[3*k+1], p[3*k+2]) for k in range(n))
+    return builtins.sum(gaussian(x, p[3*k], p[3*k+1], p[3*k+2]) for k in range(n))
 
 # defines condition of minimization, called the resudual, which is defined
 # as the difference between the data and the function.
@@ -131,8 +131,7 @@ def FOM(p, y, x, n):
 
 # Function to calculate the TL, F1 model, T=x, maxi=a, maxt=b, engy=c
 def x_function(x,a,b,c):
-    #return a*np.exp(-np.pi*(x-b)**2 / (c**2))
-    return a*c**2/((x-b)**2 + (c**2))
+    return a*np.exp(-np.pi*(x-b)**2 / (c**2))
 
 # Convert decimal to a binary string
 def den2bin(f):
@@ -444,10 +443,11 @@ def geneticTLy(x,a,b,c):
     Im = generations_f[num_gen-1]
     return Im
 # using least-squares optimization, minimize the difference between the data
-
+kz = 0.89
+lamda = 0.15405
 def AE_gen(x,a,b,c):
     #x = data_set[:,0]
-    y=lorentz(x,a,b,c)
+    y=gaussian(x,a,b,c)
     Tm = geneticTL(x,a,b,c)
     Im = geneticTLy(x,a,b,c)
    
@@ -465,8 +465,8 @@ def AE_gen(x,a,b,c):
     #
     # add beta = FWHM (rad), lamda (A0)
     #kz = 0.94
-    kz = 0.89
-    lamda = 0.15405
+    #kz = 0.89
+    #lamda = 0.15405
     FWHM=(T2-T1)*math.pi/360
     print("FWHM=",FWHM)
     costheta=np.cos(Tm*math.pi/360)
@@ -481,95 +481,63 @@ def AE_gen(x,a,b,c):
 def IR(x, E, b):
     return E * x + b
 # E: IR
+Tci = []
+Ici = []
 def AE_IR(x,a,b,c):
     #x = data_set[:,0]
-    y=lorentz(x,a,b,c)
+    y=gaussian(x,a,b,c)
     Tm = geneticTL(x,a,b,c)
     Im = geneticTLy(x,a,b,c)
-    
-    #add IR
-    #j=15
-    j=12
-    Tci=[]
-    Ici=[]
-    #Ici=[1]
-    
-    for i in range(1,j):
-        #Im[i]=geneticTLy(x,a,b,c)
-        yi=np.zeros_like(x)+Im*i/100
-        idx = np.argwhere(np.diff(np.sign(y - yi))).flatten()
-        Tc = x[idx][0]
-        Ic = y[idx][0]
-        #print("Tc,Ic=",Tc,Ic)
-        Tci=np.append(Tci, Tc)
-        Ici=np.append(Ici, Ic)
-
-    x_ND = Tci
-    y_ln=np.log(Ici)
-    
-    # curve fit
-    popt, _ = curve_fit(IR, x_ND, y_ln)
-    # summarize the parameter values
-    E_IR, b_IR = popt
-    # add beta = FWHM2 (rad), lamda (A0)
-    
+    #
+    y_half=np.zeros_like(x)+Im/2
+    #print("Img=",Im)
+    #
+    idx = np.argwhere(np.diff(np.sign(y-y_half))).flatten()
+    #print("T1,T2",  x[idx])
+    # Calculate E, method PS
+    T1=x[idx][0]
+    T2=x[idx][1]
+    #
+    # add beta = FWHM (rad), lamda (A0)
     #kz = 0.94
     kz = 0.89
     lamda = 0.15405
-    costheta2 = np.cos(Tm*math.pi/360)
-    tantheta2 = np.tan(Tm*math.pi/360)
-    #Di2 = kz * abs(lamda / (FWHM2 * costheta2))
-    #Di2 = E_IR/(kz*lamda)
-    #print("Di_IR=", Di2)
-    
-    FWHM2 = kz * lamda / (E_IR)
-    #print("FWHM2 = ",FWHM2)
-
-    Di2 = kz * abs(lamda / (FWHM2))
-    #print("Di_IR=", Di2)
-    Esi2 = abs(FWHM2 / (4 * tantheta2))
-    #print("Esi_IR=", Esi2)
-    
-    #define function to calculate adjusted r-squared
-    #def R2(x1_ND, y1_ln, degree):
-    #results = {}
-    coeffs = np.polyfit(x_ND, y_ln, 1)
-    p = np.poly1d(coeffs)
-    yhat = p(x_ND)
-    ybar = np.sum(y_ln)/len(y_ln)
-    ssreg = np.sum((yhat-ybar)**2)
-    sstot = np.sum((y_ln - ybar)**2)
-    R2 = 1- (((1-(ssreg/sstot))*(len(y_ln)-1))/(len(y_ln)-1))
-    #print("R2=",R2)
-
-    # Create linear regression object
-    #regr = linear_model.LinearRegression()
-    # Make predictions using the testing set
-    y_pred = x_ND*E_IR + b_IR
-
-    # format and show
-    fig = plt.figure()
-    bx = fig.subplots()
-    # sets the axis labels and parameters.
-    bx.tick_params(direction='in', pad=15)
-    bx.set_xlabel('$2θ$$^o$', fontsize=15)
-    bx.set_ylabel('lnI', fontsize=15)
-    #bx.plot(x_ND, y_ln, 'r-')
-
-    bx.scatter(x_ND, y_ln, color='blue', label='Data')
-
-    bx.text(0.1, 0.70, r'Di_IR = {0:0.6f}'
-             .format(E_IR), transform=bx.transAxes)
-    #add code
-    bx.text(0.1, 0.02, r'y = {0:0.5f}*x+ {1:0.5f}, R$^2$ = {2:0.5f}'
-            .format(E_IR, b_IR, R2), transform=bx.transAxes)
-
-    #bx.text(0.02, 0.65, r'R$^2$ = {0:0.6f}'
-           # .format(R2), transform=bx.transAxes)
-    # add code
-    bx.plot(x_ND, y_pred, color="red", linewidth=3)
-
-    return Di2
+    FWHM2=(T2-T1)*math.pi/360
+    print("FWHM2=",FWHM2)
+    costheta2=np.cos(Tm*math.pi/360)
+    sintheta2 = np.sin(Tm * math.pi / 360)
+    #costheta2=np.cos(Tm/2)
+    print("costheta2=",costheta2)
+    tantheta2=np.tan(Tm*math.pi/360)
+    #Di2=kz*abs(lamda/(FWHM2*costheta2))
+    #print("Di2=",Di2)
+    #Esi=abs(FWHM2/(4*tantheta2))
+    #print("Esi=", Esi)
+    #add IR
+    #j=15
+    #j=12
+    global Tci
+    global Ici
+    #for i in range(1,n_value):
+    #Tc = []
+    #Ic = []
+    #Tc.append(np.log(FWHM2))
+    Tc=FWHM2*costheta2
+    #Tc=FWHM2
+    #print(Tc)
+    #Tci=Tc
+    #print(Tci)
+    #Ic.append(np.log(1/costheta2))
+    Ic=4*sintheta2
+    #Ic=1/costheta2
+    #print(Ic)
+    #Ici=Ic
+    #print(Ici)
+    Tci=np.append(Tci, Tc)
+    Ici=np.append(Ici, Ic)
+    #return Di2
+print("Tci = ",Tci)
+print("Ici = ",Ici)
 
 cnsts =  leastsq(
             #geneticTL,
@@ -595,7 +563,7 @@ ax1 = fig.add_subplot(gs[0])
 #sets the axis labels and parameters.
 ax1.tick_params(direction = 'in', pad = 15)
 ax1.set_xlabel('$2θ$$^o$', fontsize = 15)
-ax1.set_ylabel('Intensity  (a.u.)', fontsize = 15)
+ax1.set_ylabel('Intensity (a.u.)', fontsize = 15)
 
 # plots the first two data sets: the raw data and the GaussSum.
 ax1.plot(data_set[:,0], data_set[:,1], 'ko')
@@ -606,7 +574,7 @@ ax1.plot(x,GaussSum(x,cnsts, n_value))
 for i in range(n_value):
     ax1.plot(
         x, 
-        lorentz(
+        gaussian(
             x, 
             cnsts[3*i],
             cnsts[3*i+1],
@@ -618,7 +586,7 @@ for i in range(n_value):
 for i in range(n_value):
     ax1.fill_between(
         x, 
-        lorentz(
+        gaussian(
             x, 
             cnsts[3*i],
             cnsts[3*i+1],
@@ -637,7 +605,7 @@ for i in range(n_value):
             cnsts[3*i+1],
             cnsts[3*i+2]
         )
-'''
+
 # adds a IR of each individual gaussian to the graph.
 AE3 = dict()
 for i in range(n_value):
@@ -647,8 +615,68 @@ for i in range(n_value):
             cnsts[3*i+1],
             cnsts[3*i+2]
         )
+#def AE_IR_DA(x,a,b,c):
+#def AE_IR_DA(x_ND,y_ln ):
+#print("Tci,Ici=",Tci,Ici)
+x_ND = Ici
+y_ln = Tci
 
-'''
+# curve fit
+popt, _ = curve_fit(IR, x_ND, y_ln)
+# summarize the parameter values
+E_IR, b_IR = popt
+# add beta = FWHM2 (rad), lamda (A0)
+
+#DA2 = kz * lamda / E_IR
+DA2 = kz * lamda / b_IR
+#DA2 = kz * lamda / b_IR
+#Di2 = kz * abs(lamda / (FWHM2 * costheta2))
+print("DA_GS_WH=", DA2, " nm")
+#Esi2 = abs(FWHM2 / (4 * tantheta2))
+#print("Esi_IR=", Esi2)
+
+#define function to calculate adjusted r-squared
+    #def R2(x1_ND, y1_ln, degree):
+    #results = {}
+coeffs = np.polyfit(x_ND, y_ln, 1)
+p = np.poly1d(coeffs)
+yhat = p(x_ND)
+ybar = np.sum(y_ln)/len(y_ln)
+ssreg = np.sum((yhat-ybar)**2)
+sstot = np.sum((y_ln - ybar)**2)
+R2 = 1- (((1-(ssreg/sstot))*(len(y_ln)-1))/(len(y_ln)-1))
+#print("R2=",R2)
+
+# Create linear regression object
+    #regr = linear_model.LinearRegression()
+    # Make predictions using the testing set
+y_pred = x_ND*E_IR + b_IR
+
+# format and show
+fig2 = plt2.figure()
+bx = fig2.subplots()
+    # sets the axis labels and parameters.
+bx.tick_params(direction='in', pad=15)
+bx.set_xlabel('4sin$θ$', fontsize=15)
+bx.set_ylabel('$β$cos$θ$', fontsize=15)
+    #bx.plot(x_ND, y_ln, 'r-')
+
+bx.scatter(x_ND, y_ln, color='blue', label='Data')
+
+bx.text(0.1, 0.70, r'Slope = {0:0.6f}'
+    .format(E_IR), transform=bx.transAxes)
+    #add code
+bx.text(0.1, 0.02, r'y = {0:0.5f}*x+ {1:0.5f}, R$^2$ = {2:0.5f}'
+     .format(E_IR, b_IR, R2), transform=bx.transAxes)
+bx.text(0.1, 0.65, r'DA_GS_WH = {0:0.6f} nm'
+     .format(DA2), transform=bx.transAxes)
+
+    #bx.text(0.02, 0.65, r'R$^2$ = {0:0.6f}'
+           # .format(R2), transform=bx.transAxes)
+    # add code
+bx.plot(x_ND, y_pred, color="red", linewidth=3)
+
+    #return DA2
 # creates ledger for each graph
 ledger = ['Data', 'Resultant']
 DA1=[]
@@ -656,27 +684,29 @@ DA1=[]
 for i in range(n_value):
     ledger.append(
         'P' + str(i+1)
-        + ', D_PS' + str(i+1) +' = '+ str(round(AE2[i],2)) + ' nm'
-        #+ ', D_IR'+'$_{IR}$' + str(i+1) +' = ' +str(round(AE3[i],2)) + ' nm'
+        + ', D'+'$_{PS}$' + str(i+1) +' = '+ str(round(AE2[i],2)) + ' nm'
+        #+ ', D'+'$_{IR}$' + str(i+1) +' = ' +str(round(AE3[i],2)) + ' nm'
+        #+ ', D'+'$_{IR}$' + str(i+1) +' = ' +str(round(AE3[i],2)) + ' nm'
            ) 
     #print("D"+ str(i+1)+"=",AE2[i])
     DA1 = np.append(DA1,AE2[i])
     #DA2 = np.append(DA2, AE3[i])
-
-print("DA_PS=",np.sum(DA1)/n_value," nm")
+#AE_IR_DA(Tci,Ici)
+print("DA_GS_PS=",np.sum(DA1)/n_value," nm")
 #print("DA_IR=",np.sum(DA2)/n_value," nm")
+#print("DA_IR=",DA2," nm")
 
 #adds the ledger to the graph.
 ax1.legend(ledger)
 
 #adds text FOM
 
-ax1.text(0.01, 0.995, r'(b). Lorentzian model'+', FOM = {0:0.6f}'
-         .format(abs(FOM(cnsts, y, x, n_value)))+', DA = {0:0.6f} nm\n'
+ax1.text(0.01, 0.995, r'Gaussian model'+', FOM = {0:0.6f}'
+         .format(abs(FOM(cnsts, y, x, n_value)))+', DA_GS_PS = {0:0.6f} nm\n'
          .format(np.sum(DA1)/n_value), transform=ax1.transAxes)
-#ax1.text(0.01, 0.990, r'DA = {0:0.6f} nm'
+#ax1.text(0.01, 0.995, r'DA_PS = {0:0.6f} nm'
          #.format(np.sum(DA1)/n_value), transform=ax1.transAxes)
-#ax1.text(0.31, 0.985, r'DA_IR = {0:0.6f} nm'
+#ax1.text(0.31, 0.995, r'DA_IR = {0:0.6f} nm'
          #.format(np.sum(DA2)/n_value), transform=ax1.transAxes)
 
 # Bottom plot: residuals

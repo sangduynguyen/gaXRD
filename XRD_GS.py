@@ -51,7 +51,7 @@ ax = fig.subplots()
 #sets the axis labels and parameters.
 ax.tick_params(direction = 'in', pad = 15)
 ax.set_xlabel('$2θ$$^o$', fontsize = 15)
-ax.set_ylabel('Intensity (a.u.)', fontsize = 15)
+ax.set_ylabel('Intensity  (a.u.)', fontsize = 15)
 ax.plot(x,y,'bo')
 #ax.scatter(x, y, s=15, color='blue', label='Data')
 ax.grid()
@@ -68,7 +68,7 @@ annot.set_visible(True)
 # Function for storing and showing the clicked values
 #
 #z = 0.1e-1 # import D
-z = 0.1
+z = 1.0
 #try:
 # z = float(input('E: '))
 # if z > 0:
@@ -109,14 +109,11 @@ import math
 # defines a typical gaussian function, of independent variable x,
 def gaussian(x,a,b,c):
     return a*np.exp(-np.pi*(x-b)**2 / (c**2))
-# defines a typical gaussian function, of independent variable x,
-def lorentz(x,a,b,c):
-    return a*c**2/((x-b)**2 + (c**2))
+    #return a * c ** 2 / ((x - b) ** 2 + (c ** 2))
 
 # defines the expected resultant as a sum of intrinsic gaussian functions
 def GaussSum(x, p, n):
-    return builtins.sum(lorentz(x, p[3*k], p[3*k+1], p[3*k+2]) for k in range(n))
-    #return builtins.sum(gaussian(x, p[3*k], p[3*k+1], p[3*k+2]) for k in range(n))
+    return builtins.sum(gaussian(x, p[3*k], p[3*k+1], p[3*k+2]) for k in range(n))
 
 # defines condition of minimization, called the resudual, which is defined
 # as the difference between the data and the function.
@@ -131,8 +128,7 @@ def FOM(p, y, x, n):
 
 # Function to calculate the TL, F1 model, T=x, maxi=a, maxt=b, engy=c
 def x_function(x,a,b,c):
-    #return a*np.exp(-np.pi*(x-b)**2 / (c**2))
-    return a*c**2/((x-b)**2 + (c**2))
+    return a*np.exp(-np.pi*(x-b)**2 / (c**2))
 
 # Convert decimal to a binary string
 def den2bin(f):
@@ -447,7 +443,7 @@ def geneticTLy(x,a,b,c):
 
 def AE_gen(x,a,b,c):
     #x = data_set[:,0]
-    y=lorentz(x,a,b,c)
+    y=gaussian(x,a,b,c)
     Tm = geneticTL(x,a,b,c)
     Im = geneticTLy(x,a,b,c)
    
@@ -483,7 +479,7 @@ def IR(x, E, b):
 # E: IR
 def AE_IR(x,a,b,c):
     #x = data_set[:,0]
-    y=lorentz(x,a,b,c)
+    y=gaussian(x,a,b,c)
     Tm = geneticTL(x,a,b,c)
     Im = geneticTLy(x,a,b,c)
     
@@ -516,16 +512,20 @@ def AE_IR(x,a,b,c):
     #kz = 0.94
     kz = 0.89
     lamda = 0.15405
-    costheta2 = np.cos(Tm*math.pi/360)
+    #costheta2 = np.cos(Tm*math.pi/180)
+    costheta2 = np.cos(Tm * math.pi / 360)
     tantheta2 = np.tan(Tm*math.pi/360)
     #Di2 = kz * abs(lamda / (FWHM2 * costheta2))
     #Di2 = E_IR/(kz*lamda)
+    #Di2 = E_IR
     #print("Di_IR=", Di2)
-    
-    FWHM2 = kz * lamda / (E_IR)
+    #E_IR = 2*np.pi/FWHM2**2
+    #FWHM2 = E_IR
+    FWHM2 = kz * lamda / E_IR
     #print("FWHM2 = ",FWHM2)
 
-    Di2 = kz * abs(lamda / (FWHM2))
+    #Di2 = kz * lamda / (FWHM2*costheta2)
+    Di2 = np.pi*kz * abs(lamda / FWHM2)
     #print("Di_IR=", Di2)
     Esi2 = abs(FWHM2 / (4 * tantheta2))
     #print("Esi_IR=", Esi2)
@@ -595,7 +595,7 @@ ax1 = fig.add_subplot(gs[0])
 #sets the axis labels and parameters.
 ax1.tick_params(direction = 'in', pad = 15)
 ax1.set_xlabel('$2θ$$^o$', fontsize = 15)
-ax1.set_ylabel('Intensity  (a.u.)', fontsize = 15)
+ax1.set_ylabel('Intensity (a.u.)', fontsize = 15)
 
 # plots the first two data sets: the raw data and the GaussSum.
 ax1.plot(data_set[:,0], data_set[:,1], 'ko')
@@ -606,7 +606,7 @@ ax1.plot(x,GaussSum(x,cnsts, n_value))
 for i in range(n_value):
     ax1.plot(
         x, 
-        lorentz(
+        gaussian(
             x, 
             cnsts[3*i],
             cnsts[3*i+1],
@@ -618,7 +618,7 @@ for i in range(n_value):
 for i in range(n_value):
     ax1.fill_between(
         x, 
-        lorentz(
+        gaussian(
             x, 
             cnsts[3*i],
             cnsts[3*i+1],
@@ -637,7 +637,7 @@ for i in range(n_value):
             cnsts[3*i+1],
             cnsts[3*i+2]
         )
-'''
+"""
 # adds a IR of each individual gaussian to the graph.
 AE3 = dict()
 for i in range(n_value):
@@ -647,8 +647,7 @@ for i in range(n_value):
             cnsts[3*i+1],
             cnsts[3*i+2]
         )
-
-'''
+"""
 # creates ledger for each graph
 ledger = ['Data', 'Resultant']
 DA1=[]
@@ -656,14 +655,14 @@ DA1=[]
 for i in range(n_value):
     ledger.append(
         'P' + str(i+1)
-        + ', D_PS' + str(i+1) +' = '+ str(round(AE2[i],2)) + ' nm'
-        #+ ', D_IR'+'$_{IR}$' + str(i+1) +' = ' +str(round(AE3[i],2)) + ' nm'
+        + ', D'+'$_{PS}$' + str(i+1) +' = '+ str(round(AE2[i],2)) + ' nm'
+        #+ ', D'+'$_{IR}$' + str(i+1) +' = ' +str(round(AE3[i],2)) + ' nm'
            ) 
     #print("D"+ str(i+1)+"=",AE2[i])
     DA1 = np.append(DA1,AE2[i])
     #DA2 = np.append(DA2, AE3[i])
 
-print("DA_PS=",np.sum(DA1)/n_value," nm")
+print("DA_GS_PS=",np.sum(DA1)/n_value," nm")
 #print("DA_IR=",np.sum(DA2)/n_value," nm")
 
 #adds the ledger to the graph.
@@ -671,12 +670,13 @@ ax1.legend(ledger)
 
 #adds text FOM
 
-ax1.text(0.01, 0.995, r'(b). Lorentzian model'+', FOM = {0:0.6f}'
-         .format(abs(FOM(cnsts, y, x, n_value)))+', DA = {0:0.6f} nm\n'
+ax1.text(0.01, 0.995, r'Gaussian model'+', FOM = {0:0.6f}'
+         .format(abs(FOM(cnsts, y, x, n_value)))+', DA_PS = {0:0.6f} nm\n'
+         #.format(np.sum(DA2)/n_value)+', DA_IR = {0:0.6f} nm\n'
          .format(np.sum(DA1)/n_value), transform=ax1.transAxes)
-#ax1.text(0.01, 0.990, r'DA = {0:0.6f} nm'
+#ax1.text(0.01, 0.995, r'DA_PS = {0:0.6f} nm'
          #.format(np.sum(DA1)/n_value), transform=ax1.transAxes)
-#ax1.text(0.31, 0.985, r'DA_IR = {0:0.6f} nm'
+#ax1.text(0.31, 0.995, r'DA_IR = {0:0.6f} nm'
          #.format(np.sum(DA2)/n_value), transform=ax1.transAxes)
 
 # Bottom plot: residuals

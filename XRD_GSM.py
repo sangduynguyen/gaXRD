@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 from sklearn import datasets, linear_model
 import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt0
+import matplotlib.pyplot as pltbx
 #import matplotlib.pyplot as plt1
 import matplotlib.gridspec as gridspec  # unequal plots
 from scipy.optimize import leastsq
@@ -10,51 +12,51 @@ from pylab import *
 
 from matplotlib.widgets import Cursor
 
+from tkinter import *
 import os
 import tkinter as tk
 from tkinter import filedialog
 import sys
+import json
 
 import builtins
 
 from scipy.optimize import curve_fit
 from numpy import arange
 
+#openFile_csv()
+# code
 work_dir = ''
-
-work_file =''
-
-work_file = filedialog.askopenfilename(initialdir=work_dir, filetypes=[('CSV file', '*.csv')], title='Open CSV file')    
+work_file = ''
+work_file = filedialog.askopenfilename(initialdir=work_dir, filetypes=[('CSV file', '*.csv')],
+                                       title='Open CSV file')
 
 """ Read the curve CSV file.
 """
 file_string = work_file
-# reads the input file 
-
+# reads the input file
 
 # if using a '.csv' file, use the following line:
 data_set = pd.read_csv(file_string).to_numpy()
-
 #
-x = data_set[:,0]
-max_x=np.max(x)
-min_x=np.min(x)
-
-# defines the independent variable. 
+x = data_set[:, 0]
+max_x = np.max(x)
+min_x = np.min(x)
+# defines the independent variable.
 #
-y =  data_set[:,1]
+y = data_set[:, 1]
 
 # --- No changes below this line are necessary ---
-# Plotting
-fig = plt.figure()
-ax = fig.subplots()
+fig0 = plt0.figure()
+ax = fig0.subplots()
 #sets the axis labels and parameters.
-ax.tick_params(direction = 'in', pad = 15)
+#ax.tick_params(direction = 'in', pad = 15)
 ax.set_xlabel('$2θ$$^o$', fontsize = 15)
-ax.set_ylabel('Intensity (a.u.)', fontsize = 15)
+ax.set_ylabel('Intensity  (a.u.)', fontsize = 15)
 ax.plot(x,y,'bo')
 #ax.scatter(x, y, s=15, color='blue', label='Data')
 ax.grid()
+
 # Defining the cursor
 cursor = Cursor(ax, horizOn=True, vertOn=True, useblit=True,
                 color = 'r', linewidth = 1)
@@ -68,15 +70,7 @@ annot.set_visible(True)
 # Function for storing and showing the clicked values
 #
 #z = 0.1e-1 # import D
-z = 0.1
-#try:
-# z = float(input('E: '))
-# if z > 0:
-#    print('E = ',z)
-#except:
- #z = 1.11
-# print("Default!, E = ",z)
-
+z = 1.0
 coord = []
 #initials = []
 def onclick(event):
@@ -86,20 +80,48 @@ def onclick(event):
     coord.append((event.ydata,event.xdata, z))
     x1 = event.xdata
     y1 = event.ydata
-    #z = 1.61  
+    #z = 1.61
     # printing the values of the selected point
     print(y1,x1,z)
     annot.xy = (x1,y1)
     text = "[{:.3g}, {:.5}]".format(x1,y1)
     annot.set_text(text)
     annot.set_visible(True)
-    fig.canvas.draw() #redraw the figure
+    fig0.canvas.draw() #redraw the figure
+try:
+ task = float(input('1: Have Peak data; 2: Click Peak by mouse. Please chose number and Enter \n'))
+ if task == 1:
+    print('Have Peak data')
+    initials=[]
+    with open('initials.json', 'r') as f:
+        data_peak= json.loads(f.read())
+        #print(data_peak)
+        initials=data_peak
+        print(initials)
+    plt0.close()
+ elif task == 2:
+    print('Wait click Peak by mouse ')
+    fig.canvas.mpl_connect('button_press_event', onclick)
+    plt.show()
+    #with open("initials.txt", "w") as output:
+        #output.write(str(initials))
+    initials = list(coord)
+    print(initials)
+    with open("initials.json", "w") as output:
+        output.write(json.dumps(initials))
+        #output.write(str(initials))
+        print(initials)
+ else:
+     print("No task")
+except:
+    print("Exit")
+#initials = list(coord)
+#print(initials)
 
-fig.canvas.mpl_connect('button_press_event', onclick)
-plt.show()
-
-initials = list(coord)
-print(initials)
+#initials = [(3218.6263158485112, 25.16328629032258, 1.0), (467.40708959271865, 27.168457661290326, 1.0), (351.97131786170644, 35.96036290322581, 1.0), (986.8680623822738, 37.811290322580646, 1.0), (1275.4574917098046, 47.837147177419354, 1.0), (967.6287670937718, 54.006905241935485, 1.0), (775.2358142087514, 55.086612903225806, 1.0), (621.3214519007349, 62.64456653225807, 1.0), (323.1123749289533, 68.81432459677418, 1.0), (255.77484141919615, 70.20252016129032, 1.0), (371.2106131502085, 74.98408266129032, 1.0), (159.57836497668586, 76.37227822580645, 1.0)]
+# Save initials
+#with open("initials.txt", "w") as output:
+ #   output.write(str(initials))
 
 # determines the number of gaussian functions 
 # to compute from the initial guesses
@@ -109,14 +131,11 @@ import math
 # defines a typical gaussian function, of independent variable x,
 def gaussian(x,a,b,c):
     return a*np.exp(-np.pi*(x-b)**2 / (c**2))
-# defines a typical gaussian function, of independent variable x,
-def lorentz(x,a,b,c):
-    return a*c**2/((x-b)**2 + (c**2))
+    #return a * c ** 2 / ((x - b) ** 2 + (c ** 2))
 
 # defines the expected resultant as a sum of intrinsic gaussian functions
 def GaussSum(x, p, n):
-    return builtins.sum(lorentz(x, p[3*k], p[3*k+1], p[3*k+2]) for k in range(n))
-    #return builtins.sum(gaussian(x, p[3*k], p[3*k+1], p[3*k+2]) for k in range(n))
+    return builtins.sum(gaussian(x, p[3*k], p[3*k+1], p[3*k+2]) for k in range(n))
 
 # defines condition of minimization, called the resudual, which is defined
 # as the difference between the data and the function.
@@ -131,8 +150,7 @@ def FOM(p, y, x, n):
 
 # Function to calculate the TL, F1 model, T=x, maxi=a, maxt=b, engy=c
 def x_function(x,a,b,c):
-    #return a*np.exp(-np.pi*(x-b)**2 / (c**2))
-    return a*c**2/((x-b)**2 + (c**2))
+    return a*np.exp(-np.pi*(x-b)**2 / (c**2))
 
 # Convert decimal to a binary string
 def den2bin(f):
@@ -447,7 +465,7 @@ def geneticTLy(x,a,b,c):
 
 def AE_gen(x,a,b,c):
     #x = data_set[:,0]
-    y=lorentz(x,a,b,c)
+    y=gaussian(x,a,b,c)
     Tm = geneticTL(x,a,b,c)
     Im = geneticTLy(x,a,b,c)
    
@@ -483,7 +501,7 @@ def IR(x, E, b):
 # E: IR
 def AE_IR(x,a,b,c):
     #x = data_set[:,0]
-    y=lorentz(x,a,b,c)
+    y=gaussian(x,a,b,c)
     Tm = geneticTL(x,a,b,c)
     Im = geneticTLy(x,a,b,c)
     
@@ -516,16 +534,20 @@ def AE_IR(x,a,b,c):
     #kz = 0.94
     kz = 0.89
     lamda = 0.15405
-    costheta2 = np.cos(Tm*math.pi/360)
+    #costheta2 = np.cos(Tm*math.pi/180)
+    costheta2 = np.cos(Tm * math.pi / 360)
     tantheta2 = np.tan(Tm*math.pi/360)
     #Di2 = kz * abs(lamda / (FWHM2 * costheta2))
     #Di2 = E_IR/(kz*lamda)
+    #Di2 = E_IR
     #print("Di_IR=", Di2)
-    
-    FWHM2 = kz * lamda / (E_IR)
+    #E_IR = 2*np.pi/FWHM2**2
+    #FWHM2 = E_IR
+    FWHM2 = kz * lamda / E_IR
     #print("FWHM2 = ",FWHM2)
 
-    Di2 = kz * abs(lamda / (FWHM2))
+    #Di2 = kz * lamda / (FWHM2*costheta2)
+    Di2 = np.pi*kz * abs(lamda / FWHM2)
     #print("Di_IR=", Di2)
     Esi2 = abs(FWHM2 / (4 * tantheta2))
     #print("Esi_IR=", Esi2)
@@ -595,7 +617,7 @@ ax1 = fig.add_subplot(gs[0])
 #sets the axis labels and parameters.
 ax1.tick_params(direction = 'in', pad = 15)
 ax1.set_xlabel('$2θ$$^o$', fontsize = 15)
-ax1.set_ylabel('Intensity  (a.u.)', fontsize = 15)
+ax1.set_ylabel('Intensity (a.u.)', fontsize = 15)
 
 # plots the first two data sets: the raw data and the GaussSum.
 ax1.plot(data_set[:,0], data_set[:,1], 'ko')
@@ -606,7 +628,7 @@ ax1.plot(x,GaussSum(x,cnsts, n_value))
 for i in range(n_value):
     ax1.plot(
         x, 
-        lorentz(
+        gaussian(
             x, 
             cnsts[3*i],
             cnsts[3*i+1],
@@ -618,7 +640,7 @@ for i in range(n_value):
 for i in range(n_value):
     ax1.fill_between(
         x, 
-        lorentz(
+        gaussian(
             x, 
             cnsts[3*i],
             cnsts[3*i+1],
@@ -637,7 +659,7 @@ for i in range(n_value):
             cnsts[3*i+1],
             cnsts[3*i+2]
         )
-'''
+"""
 # adds a IR of each individual gaussian to the graph.
 AE3 = dict()
 for i in range(n_value):
@@ -647,8 +669,7 @@ for i in range(n_value):
             cnsts[3*i+1],
             cnsts[3*i+2]
         )
-
-'''
+"""
 # creates ledger for each graph
 ledger = ['Data', 'Resultant']
 DA1=[]
@@ -656,14 +677,14 @@ DA1=[]
 for i in range(n_value):
     ledger.append(
         'P' + str(i+1)
-        + ', D_PS' + str(i+1) +' = '+ str(round(AE2[i],2)) + ' nm'
-        #+ ', D_IR'+'$_{IR}$' + str(i+1) +' = ' +str(round(AE3[i],2)) + ' nm'
+        + ', D'+'$_{PS}$' + str(i+1) +' = '+ str(round(AE2[i],2)) + ' nm'
+        #+ ', D'+'$_{IR}$' + str(i+1) +' = ' +str(round(AE3[i],2)) + ' nm'
            ) 
     #print("D"+ str(i+1)+"=",AE2[i])
     DA1 = np.append(DA1,AE2[i])
     #DA2 = np.append(DA2, AE3[i])
 
-print("DA_PS=",np.sum(DA1)/n_value," nm")
+print("DA_GS_PS=",np.sum(DA1)/n_value," nm")
 #print("DA_IR=",np.sum(DA2)/n_value," nm")
 
 #adds the ledger to the graph.
@@ -671,12 +692,13 @@ ax1.legend(ledger)
 
 #adds text FOM
 
-ax1.text(0.01, 0.995, r'(b). Lorentzian model'+', FOM = {0:0.6f}'
-         .format(abs(FOM(cnsts, y, x, n_value)))+', DA = {0:0.6f} nm\n'
+ax1.text(0.01, 0.995, r'Gaussian model'+', FOM = {0:0.6f}'
+         .format(abs(FOM(cnsts, y, x, n_value)))+', DA_PS = {0:0.6f} nm\n'
+         #.format(np.sum(DA2)/n_value)+', DA_IR = {0:0.6f} nm\n'
          .format(np.sum(DA1)/n_value), transform=ax1.transAxes)
-#ax1.text(0.01, 0.990, r'DA = {0:0.6f} nm'
+#ax1.text(0.01, 0.995, r'DA_PS = {0:0.6f} nm'
          #.format(np.sum(DA1)/n_value), transform=ax1.transAxes)
-#ax1.text(0.31, 0.985, r'DA_IR = {0:0.6f} nm'
+#ax1.text(0.31, 0.995, r'DA_IR = {0:0.6f} nm'
          #.format(np.sum(DA2)/n_value), transform=ax1.transAxes)
 
 # Bottom plot: residuals
@@ -703,6 +725,9 @@ df = pd.DataFrame(data_new)
 # saving the dataframe
 #df.to_csv('C1.csv', sep=';', header=False, index=False)
 df.to_csv('XRD_new.csv',header=False, index=False)
+
+# Let the window wait for any events
+#window.mainloop()
 
 # close window tinker
 #destroy()

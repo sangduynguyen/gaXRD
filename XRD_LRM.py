@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from sklearn import datasets, linear_model
 import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt0
 #import matplotlib.pyplot as plt1
 import matplotlib.gridspec as gridspec  # unequal plots
 from scipy.optimize import leastsq
@@ -14,6 +15,7 @@ import os
 import tkinter as tk
 from tkinter import filedialog
 import sys
+import json
 
 import builtins
 
@@ -95,11 +97,39 @@ def onclick(event):
     annot.set_visible(True)
     fig.canvas.draw() #redraw the figure
 
-fig.canvas.mpl_connect('button_press_event', onclick)
-plt.show()
+#fig.canvas.mpl_connect('button_press_event', onclick)
+#plt.show()
 
-initials = list(coord)
-print(initials)
+try:
+ task = float(input('1: Have Peak data; 2: Click Peak by mouse. Please chose number and Enter \n'))
+ if task == 1:
+    print('Have Peak data')
+    initials=[]
+    with open('initials.json', 'r') as f:
+        data_peak= json.loads(f.read())
+        #print(data_peak)
+        initials=data_peak
+        print(initials)
+    plt.close()
+ elif task == 2:
+    print('Wait click Peak by mouse ')
+    fig.canvas.mpl_connect('button_press_event', onclick)
+    plt.show()
+    #with open("initials.txt", "w") as output:
+        #output.write(str(initials))
+    initials = list(coord)
+    print(initials)
+    with open("initials.json", "w") as output:
+        output.write(json.dumps(initials))
+        #output.write(str(initials))
+        print(initials)
+ else:
+     print("No task")
+except:
+    print("Exit")
+#initials = list(coord)
+#print(initials)
+
 
 # determines the number of gaussian functions 
 # to compute from the initial guesses
